@@ -272,7 +272,7 @@ class App(Gtk.Window):
         textview.set_cursor_visible(False)
         textview.set_justification(Gtk.Justification.CENTER)
         textbuffer = textview.get_buffer()
-        s = '\n\n\n\n\n\n\n\n\nThis program is brought to you by\nArtluix - Daineko Stanislau\nSt. of BSUIR of FKSiS\nof chair of Informatics\n\nBig thanks and credits to devs of:\ndecode-dimms\n lshw\n hdparm\n hddterm'
+        s = '\n\n\n\n\n\n\n\n\nThis program is brought to you by\nArtluix - Daineko Stanislau\nSt. of BSUIR of FKSiS\nof chair of Informatics\n\nBig thanks and credits to devs of:\ndecode-dimms\n lshw\n hdparm\n hddtemp'
         textbuffer.set_text(s)
         self.page_3.pack_start(textview, True, True, 0)
 
