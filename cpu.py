@@ -1,5 +1,4 @@
 import glob
-import subprocess
 import time
 
 
@@ -48,7 +47,9 @@ class CPU:
 
 
     def __name(self):
-        name_str = subprocess.check_output('lscpu | grep \'Model name\'', shell = True).decode()
+        path = 'sysfs/cpu_name'
+        with open(path, 'r') as f:
+            name_str = f.readline()
         return name_str.split(':')[1].lstrip(' ').rstrip('\n')
 
 

@@ -5,7 +5,9 @@ class Battery:
         self.voltage_label = 'Voltage'
         self.voltage_row = []
 
-        self.charge_header_labels = ['Now', 'Full', 'Full Design']
+        self.charge_header_label = 'Category'
+        self.charge_header_row = ['Now', 'Full', 'Full Design']
+        
         self.charge_label = 'Charge'
         self.charge_row = []
 
@@ -21,8 +23,12 @@ class Battery:
         return self.voltage_row
 
 
-    def get_charge_header_labels(self):
-        return self.charge_header_labels
+    def get_charge_header_label(self):
+        return self.charge_header_label
+
+    def get_charge_header_row(self):
+        return self.charge_header_row
+
 
     def get_charge_label(self):
         return self.charge_label
@@ -37,7 +43,7 @@ class Battery:
         path_model_name = '/sys/class/power_supply/BAT1/model_name'
         bat_name_str = ''
         with open(path_manufacturer, 'r') as f:
-            bat_name_str = f.readline().replace('\n', ' ')
+            bat_name_str = f.readline().rstrip('\n')
         with open(path_model_name, 'r') as f:
             bat_name_str += f.readline().rstrip('\n')
         return bat_name_str

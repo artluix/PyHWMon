@@ -1,11 +1,9 @@
-import subprocess
 
-
-class GPU:
+class GPU_Integrated:
 
     def __init__(self):
         self.name = self.__name()
-        self.freq_label = 'GPU'
+        self.freq_label = 'GPU Integrated'
         self.freq_row = []
 
 
@@ -22,9 +20,10 @@ class GPU:
 
 
     def __name(self):
-        gpu_name_str = subprocess.check_output('lspci | grep \'VGA\'', shell = True).decode()
-        return gpu_name_str.split('VGA')[1].split(':')[1].lstrip(' ').rstrip('\n')
-
+        path = 'sysfs/gpu_integrated_name'
+        with open(path, 'r') as f:
+            gpu_name_str = f.readline()
+        return gpu_name_str.split('VGA compatible controller: ')[1].rstrip('\n')
 
     def __frequency(self):
         path = '/sys/class/drm/card0/gt_cur_freq_mhz'

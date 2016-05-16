@@ -1,5 +1,3 @@
-import subprocess
-
 
 class SSD:
 
@@ -22,12 +20,16 @@ class SSD:
 
 
     def __name(self):
-        hdd_name_str = subprocess.check_output('hdparm -I /dev/sda | grep \'Model Number\'', shell=True).decode()
+        path = 'sysfs/hdd_name'
+        with open(path, 'r') as f:
+            hdd_name_str = f.readline()
         return hdd_name_str.split(':')[1].lstrip(' ').rstrip('\n')
 
 
     def __temperature(self):
-        temp_cur = int(subprocess.check_output(['hddtemp', '/dev/sda', '-n']))
+        path = 'sysfs/hdd_temp'
+        with open(path, 'r') as f:
+            temp_cur = int(f.readline())
         if not self.temp_row:
             self.temp_row = [temp_cur] * 3
         else:

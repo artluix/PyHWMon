@@ -1,10 +1,11 @@
+#!/usr/bin/env python
+
 from gi import require_version
 require_version('Gtk', '3.0')
 
 
 from gi.repository import Gtk, GObject, Pango
 import threading
-import subprocess
 import time
 import json
 import re
@@ -12,7 +13,8 @@ import re
 
 from host import Host
 from cpu import CPU
-from gpu import GPU
+from gpu_integrated import GPU_Integrated
+from gpu_discrete import GPU_Discrete 
 from ssd import SSD
 from battery import Battery
 
@@ -27,7 +29,8 @@ class App(Gtk.Window):
 
         self.host = Host()
         self.cpu = CPU()
-        self.gpu = GPU()
+        self.gpu_integrated = GPU_Integrated()
+        self.gpu_discrete = GPU_Discrete()
         self.ssd = SSD()
         self.bat = Battery()
 
@@ -95,10 +98,15 @@ class App(Gtk.Window):
         for u_l in self.cpu.get_usage_labels():
             self.cpu_usage_value_nodes.append(self.store_1.append(cpu_usage_node, [u_l] + [''] * 3))
 
-        gpu_node = self.store_1.append(host_node, [self.gpu.get_name()] + [''] * 3)
+        gpu_interated_node = self.store_1.append(host_node, [self.gpu_integrated.get_name()] + [''] * 3)
+        gpu_integrated_freq_node = self.store_1.append(gpu_interated_node, ['Frequency'] + [''] * 3)
+        self.gpu_integrated_freq_value_node = self.store_1.append(gpu_integrated_freq_node, \
+            [self.gpu_integrated.get_freq_label()] + [''] * 3)
 
-        gpu_freq_node = self.store_1.append(gpu_node, ['Frequency'] + [''] * 3)
-        self.gpu_freq_value_node = self.store_1.append(gpu_freq_node, [self.gpu.get_freq_label()] + [''] * 3)
+        gpu_discrete_node = self.store_1.append(host_node, [self.gpu_discrete.get_name()] + [''] * 3)
+        gpu_discrete_temp_node = self.store_1.append(gpu_discrete_node, ['Temperature'] + [''] * 3)
+        self.gpu_discrete_temp_value_node = self.store_1.append(gpu_discrete_temp_node, \
+            [self.gpu_discrete.get_temp_label()] + [''] * 3)
 
         ssd_node = self.store_1.append(host_node, [self.ssd.get_name()] + [''] * 3)
 
@@ -111,14 +119,21 @@ class App(Gtk.Window):
         self.bat_voltage_value_node = self.store_1.append(bat_voltage_node, [self.bat.get_voltage_label()] + [''] * 3) 
 
         bat_charge_node = self.store_1.append(bat_node, ['Charge'] + [''] * 3)
-        self.store_1.append(bat_charge_node, [''] + self.bat.get_charge_header_labels())
+        self.store_1.append(bat_charge_node, [self.bat.get_charge_header_label()] + self.bat.get_charge_header_row())
         self.bat_charge_value_node = self.store_1.append(bat_charge_node, [self.bat.get_charge_label()] + [''] * 3)
 
 
     def __add_threads(self):
-        sensors_update_callbacks = [self.__cpu_temp_update_callback, self.__cpu_freq_update_callback,
-            self.__cpu_usage_update_callback, self.__gpu_freq_update_callback, self.__ssd_temp_update_callback,
-            self.__bat_voltage_update_callback, self.__bat_charge_update_callback]
+        sensors_update_callbacks = [
+                                    self.__cpu_temp_update_callback, 
+                                    self.__cpu_freq_update_callback,
+                                    self.__cpu_usage_update_callback, 
+                                    self.__gpu_integrated_freq_update_callback, 
+                                    self.__gpu_discrete_temp_update_callback, 
+                                    self.__ssd_temp_update_callback, 
+                                    self.__bat_voltage_update_callback, 
+                                    self.__bat_charge_update_callback
+                                    ]
 
         self.sensors_threads = []
         for c in sensors_update_callbacks:
@@ -156,9 +171,13 @@ class App(Gtk.Window):
             self.store_1[self.cpu_usage_value_nodes[i]][1:] = [str(x) + ' %' for x in cpu_usage_row]
 
 
-    def __gpu_freq_update_callback(self):
-        gpu_freq_row = self.gpu.get_frequency()
-        self.store_1[self.gpu_freq_value_node][1:] = [str(x) + ' MHz' for x in gpu_freq_row]
+    def __gpu_integrated_freq_update_callback(self):
+        gpu_freq_row = self.gpu_integrated.get_frequency()
+        self.store_1[self.gpu_integrated_freq_value_node][1:] = [str(x) + ' MHz' for x in gpu_freq_row]
+
+    def __gpu_discrete_temp_update_callback(self):
+        gpu_temp_row = self.gpu_discrete.get_temperature()
+        self.store_1[self.gpu_discrete_temp_value_node][1:] = [str(x) + ' °C' for x in gpu_temp_row]
 
 
     def __ssd_temp_update_callback(self):
@@ -198,8 +217,9 @@ class App(Gtk.Window):
 
 
     def __read_dimms(self):
-        subprocess.call(['sudo', 'modprobe', 'eeprom'])
-        s = subprocess.check_output('decode-dimms').decode()
+        path = 'sysfs/decode_dimms'
+        with open(path, 'r') as f:
+            s = f.read()
         return s.split('\n\n\n')[1:3]
 
 
@@ -229,7 +249,9 @@ class App(Gtk.Window):
 
 
     def __read_lshw(self):
-        data_str = subprocess.check_output(['lshw', '-json']).decode()
+        path = 'sysfs/lshw'
+        with open(path, 'r') as f:
+            data_str = f.read()
         return json.loads(data_str)
 
 
