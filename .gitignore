@@ -1,3 +1,4 @@
 sysfs
 *.swp
 __pycache__
+.gitignore
